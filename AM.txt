@@ -1,0 +1,42 @@
+%Undermodulation
+clc;
+close all;
+clear;
+am=1;   %am=5(critical);am=7(over modulation)
+ac=5;
+mu=am/ac;
+fm=10;
+fc=200;
+fs=1000;
+ka=mu/am;
+t=0:1:1000;
+mt=am*cos(2*pi*(fm/fs)*t);
+ct=ac*cos(2*pi*(fc/fs)*t);
+am=(1+ka.*mt).*(ct);
+subplot(3,2,1);
+plot(t,mt);
+xlabel('time');
+ylabel('m(t)');
+title('Message signal');
+subplot(3,2,2)
+plot(t,ct);
+xlabel('time');
+ylabel('c(t)');
+title('Carrier signal');
+subplot(3,2,3);
+plot(t,am);
+xlabel('time');
+ylabel('am(t)');
+title('Amplitude Modulated signal');
+subplot(3,2,4);
+AM=fft(am,fs);
+plot(abs(AM));
+xlabel('frequency');
+ylabel('amplitude');
+title('Spectrum of AM Signal');
+subplot(3,2,5);
+pspectrum(am);
+subplot(3,2,6);
+zt=demod(am,fc,fs);
+plot(t,zt);
+title('Demodulated signal')

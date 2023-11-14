@@ -1,0 +1,81 @@
+clc;
+clear all;
+close all;
+t=0:0.01:1;
+f=3;
+m=randi([0,1],1,10);
+msg_sig=[];
+bpsk_sig=[];
+carrier_sig=[];
+for i=1:length(m)
+if m(i)==0
+msg_sig=[msg_sig zeros(1,length(t))];
+bpsk_sig=[bpsk_sig sin((2*pi*f*t)+pi)];
+else
+msg_sig=[msg_sig ones(1,length(t))];
+bpsk_sig=[bpsk_sig sin(2*pi*f*t)];
+end
+carrier_sig=[carrier_sig sin(2*pi*f*t)];
+end
+subplot(6,1,1);
+plot(carrier_sig);
+xlabel('time(s)');
+ylabel('amplitude');
+title('CARRIER SIGNAL');
+subplot(6,1,2);
+plot(msg_sig);
+xlabel('time(s)');
+ylabel('amplitude');
+title('MESSAGE SIGNAL');
+ylim([-0.5 1.5]);
+subplot(6,1,3);
+plot(bpsk_sig);
+xlabel('time(s)');
+ylabel('amplitude');
+title('BPSK SIGNAL');
+rec_sig=awgn(bpsk_sig,12);
+subplot(6,1,4);
+plot(rec_sig);
+xlabel('time(s)');
+ylabel('amplitude');
+title('RECIEVED SIGNAL');
+dem_sig=(rec_sig).*(carrier_sig);
+subplot(6,1,5);
+plot(dem_sig);
+xlabel('time(s)');
+ylabel('amplitude');
+title('DEMODULATED SIGNAL');
+%GENERATION OF ORIGINAL MESSAGE SIGNAL
+demod_sig=[];
+for i=1:length(m)
+k=sum(dem_sig((1+(i-1)*length(t)):(i*length(t))));
+if k>0
+demod_sig=[demod_sig ones(1,length(t))];
+else
+demod_sig=[demod_sig zeros(1,length(t))];
+end
+end
+subplot(6,1,6);
+plot(demod_sig);
+ylim([-0.5 1.5]);
+xlabel('time(s)');
+ylabel('amplitude');
+title('ORIGINAL MSG SIGNAL');
+
+M = 1e7;
+b = randi([0,1], M, 1);
+bpskmod = comm.BPSKModulator;
+bpskdemod = comm.BPSKDemodulator;
+b_mod = bpskmod(b);
+for SNR = 0:1:12
+b_rec = awgn(b_mod,SNR,"measured");
+b_demod = bpskdemod(b_rec);
+BER(SNR+1) = length(find(b~=b_demod))/M;
+SNR_=10.^(SNR/10);
+BER_th(SNR+1) = (1/2)*erfc(sqrt(SNR_));
+end
+figure;
+semilogy(0:1:12,BER,"-k*",0:1:12,BER_th,"-k")
+grid on;
+title('BER PERFOMANCE BY BPSK');
+xlabel('SNR in dB');
